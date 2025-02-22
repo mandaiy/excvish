@@ -1,0 +1,78 @@
+[project]
+name = "cvexish"
+version = "0.1.0"
+description = "Computer Vision EXtensions for Image Segmentation and Hyper-spectral image"
+readme = "README.md"
+authors = [
+    { name = "Yusaku Mandai", email = "mandai.yusaku@gmail.com" }
+]
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=1.26.4",
+    "opencv-python>=4.11.0.86",
+    "pillow>=11.1.0",
+    "scikit-image>=0.25.2",
+    "scikit-learn>=1.6.1",
+    "scipy>=1.13.1",
+    "spectral>=0.23.1",
+]
+
+[dependency-groups]
+dev = [
+    "mypy>=1.15.0",
+    "pre-commit>=4.1.0",
+    "ruff>=0.9.7",
+    "tox>=4.24.1",
+    "tox-uv>=1.25.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.mypy]
+
+[tool.ruff]
+exclude = [
+]
+
+target-version = "py311"
+line-length = 119
+indent-width = 4
+
+[tool.ruff.lint]
+extend-select = ["I"]
+
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "B",  # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+]
+ignore = [
+    "E741"
+]
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+envlist = lint,format,mypy,p311
+
+[testenv:format]
+commands =
+    ruff format
+    ruff check --fix
+
+[testenv:lint]
+deps = ruff
+commands =
+    ruff format --check
+    ruff check
+
+[testenv:mypy]
+deps = mypy
+commands = mypy src --ignore-missing-imports --strict-optional --disallow-untyped-defs
+"""
