@@ -40,14 +40,13 @@ def symmetricality_chamfer_distance(
 ) -> float:
     if len(image.shape) == 3:
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    _, w = image.shape
+    h, w = image.shape
 
     if direction == "horizontal":
         pad = 1 if w % 2 == 1 else 0
         mid = w // 2
         l = image[:, :mid]
         r = np.fliplr(image[:, pad + mid :])
-
         return chamfer_distance(l, r)
 
     raise NotImplementedError(f"Not implemented yet: {direction}")
@@ -137,22 +136,22 @@ def color_labels(labels: np.ndarray, color_distance_threshold: float = 60.0) -> 
     max_label = unique_labels.max()
 
     # ------------------------------------------------------------
-    # 1) 隣接関係 (グラフ) を構築
-    #    ここでは「同じ画素の右ピクセルや下ピクセルが別ラベルであれば隣接」とする
+    # 1) Build adjacency relationships (graph)
+    #    Here, we define "adjacent" as "different labels in neighboring right or down pixels"
     # ------------------------------------------------------------
-    adjacency: dict = {lab: set() for lab in unique_labels}  # 各ラベルに隣接するラベルの集合
+    adjacency: dict = {lab: set() for lab in unique_labels}  # Set of labels adjacent to each label
 
     for r in range(h):
         for c in range(w):
             current_label = labels[r, c]
-            # 右ピクセル
+            # Right pixel
             if c < w - 1:
                 right_label = labels[r, c + 1]
                 if right_label != current_label:
                     adjacency[current_label].add(right_label)
                     adjacency[right_label].add(current_label)
 
-            # 下ピクセル
+            # Down pixel
             if r < h - 1:
                 down_label = labels[r + 1, c]
                 if down_label != current_label:
@@ -160,23 +159,23 @@ def color_labels(labels: np.ndarray, color_distance_threshold: float = 60.0) -> 
                     adjacency[down_label].add(current_label)
 
     # ------------------------------------------------------------
-    # 2) 色割り当て (グラフ彩色)
-    #    - 隣接するラベルの色とは一定の色距離以上離す
+    # 2) Color assignment (graph coloring)
+    #    - Ensure a minimum color distance between adjacent labels
     # ------------------------------------------------------------
-    # ラベルID → BGR色 を格納するテーブル
+    # Table to store label ID → BGR color
     color_map = np.zeros((max_label + 1, 3), dtype=np.uint8)
 
-    # 背景 (label=0) は黒固定に
+    # Fixed black for background (label=0)
     color_map[0] = (0, 0, 0)
 
     def color_distance(c1: np.ndarray, c2: np.ndarray) -> np.ndarray:
-        """BGR 空間でのユークリッド距離"""
+        """Euclidean distance in BGR space"""
         return np.sqrt(np.sum((c1 - c2) ** 2))
 
     def can_use_color(candidate_color: np.ndarray, assigned_neighbors: list) -> bool:
         """
-        candidate_color が、既に色が決まっている隣接ラベルと
-        色距離が十分離れているかどうかを判定
+        Determines if candidate_color is sufficiently distant from
+        the colors of already assigned adjacent labels
         """
         for neighbor_label in assigned_neighbors:
             dist = color_distance(candidate_color, color_map[neighbor_label])
@@ -184,32 +183,32 @@ def color_labels(labels: np.ndarray, color_distance_threshold: float = 60.0) -> 
                 return False
         return True
 
-    # 背景(0)以外のラベルを昇順で走査 (1 ~ max_label)
-    # connectedComponents で得られるラベルは 0～num_labels-1 で連番になるが、
-    # 念のため unique_labels の中からスキップしない形で処理
+    # Iterate through labels in ascending order (1 ~ max_label), skipping background (0)
+    # Labels from connectedComponents are sequential (0 to num_labels-1),
+    # but we process using unique_labels to be safe
     for lab in unique_labels:
         if lab == 0:
-            continue  # 背景は固定
-        neighbors = adjacency[lab]  # 隣接するラベル
+            continue  # Skip background as it's fixed
+        neighbors = adjacency[lab]  # Adjacent labels
 
-        # 十分色が離れるものが見つかるまでランダム生成
+        # Generate random colors until we find one that's sufficiently distant
         trials = 0
         while True:
             trials += 1
             candidate = np.random.randint(0, 256, size=(3,), dtype=np.uint8)
-            # 自分と隣接するラベルのうち、すでに色確定しているものだけをチェック
+            # Check only against adjacent labels that already have colors assigned
             assigned_neighbors = [n for n in neighbors if (n < lab and n != 0)]
             if can_use_color(candidate, assigned_neighbors):
                 color_map[lab] = candidate
                 break
-            # 念のため無限ループしないように
+            # Prevent infinite loops
             if trials > 1000:
-                # どうしても見つからない場合は妥協して決定
+                # If we can't find a suitable color, compromise and use the current candidate
                 color_map[lab] = candidate
                 break
 
     # ------------------------------------------------------------
-    # 3) ラベルに対応する色をピクセル単位で塗る
+    # 3) Apply the corresponding color to each pixel based on its label
     # ------------------------------------------------------------
     colored_result = np.zeros((h, w, 3), dtype=np.uint8)
     for r in range(h):
