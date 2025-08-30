@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Computer Vision EXtensions for Image Segmentation and Hyper-spectral image"
 readme = "README.md"
 authors = [
-    { name = "Yusaku Mandai", email = "mandai.yusaku@gmail.com" }
+    { name = "Yusaku Mandai", email = "yusaku.mandai.02@gmail.com" }
 ]
 requires-python = ">=3.11"
 dependencies = [
@@ -22,8 +22,10 @@ dev = [
     "mypy>=1.15.0",
     "pre-commit>=4.1.0",
     "ruff>=0.9.7",
+    "scipy-stubs>=1.16.0.2",
     "tox>=4.24.1",
     "tox-uv>=1.25.0",
+    "ty>=0.0.1a13",
 ]
 
 [build-system]
