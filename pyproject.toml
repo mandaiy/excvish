@@ -1,7 +1,7 @@
 [project]
-name = "cvexish"
-version = "0.1.0"
-description = "Computer Vision EXtensions for Image Segmentation and Hyper-spectral image"
+name = "excvish"
+version = "0.3.0"
+description = "Extension of Computer Vision Image Segmentation Hyper-spectral image"
 readme = "README.md"
 authors = [
     { name = "Yusaku Mandai", email = "yusaku.mandai.02@gmail.com" }
