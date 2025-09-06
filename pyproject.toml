@@ -57,24 +57,3 @@ select = [
 ignore = [
     "E741"
 ]
-
-[tool.tox]
-legacy_tox_ini = """
-[tox]
-envlist = lint,format,mypy,p311
-
-[testenv:format]
-commands =
-    ruff format
-    ruff check --fix
-
-[testenv:lint]
-deps = ruff
-commands =
-    ruff format --check
-    ruff check
-
-[testenv:mypy]
-deps = mypy
-commands = mypy src --ignore-missing-imports --strict-optional --disallow-untyped-defs
-"""
