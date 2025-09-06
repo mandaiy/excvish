@@ -1,10 +1,10 @@
 import cv2
 import numpy as np
 
-from cvexish.types import BBox
+from excvish import BBox
 
 
-def non_max_suppression(
+def _non_max_suppression(
     bbox_list: list[tuple[int, int, int, int]],
     overlap_threshold: float,
 ) -> np.ndarray:
@@ -40,7 +40,7 @@ def non_max_suppression(
     return bboxes[pick].astype("int")
 
 
-def match_template(
+def _match_template(
     img: np.ndarray, template: np.ndarray, threshold_matching: float = 0.99, threshold_nms: float = 0.3
 ) -> np.ndarray:
     result = cv2.matchTemplate(img, template, cv2.TM_CCORR_NORMED)
@@ -49,7 +49,7 @@ def match_template(
     locations = np.where(result >= threshold_matching)
     rects = [(x, y, x + w, y + h) for (x, y) in zip(*locations[::-1], strict=False)]
 
-    return non_max_suppression(rects, threshold_nms)
+    return _non_max_suppression(rects, threshold_nms)
 
 
 def find_matched_template(
@@ -58,6 +58,15 @@ def find_matched_template(
     threshold_matching: float = 0.99,
     threshold_nms: float = 0.3,
 ) -> list[BBox]:
-    final_boxes = match_template(img, template, threshold_matching, threshold_nms)
+    """Finds locations in the image that match the given template.
+    Args:
+        img (np.ndarray): Input image in which to search for the template.
+        template (np.ndarray): Template image to search for.
+        threshold_matching (float, optional): Similarity threshold for template matching. Defaults to 0.99.
+        threshold_nms (float, optional): Overlap threshold for non-maximum suppression. Defaults to 0.3.
+    Returns:
+        list[BBox]: List of bounding boxes where the template matches the image.
+    """
+    final_boxes = _match_template(img, template, threshold_matching, threshold_nms)
 
     return [BBox.from_xyxy_array(arr) for arr in final_boxes]

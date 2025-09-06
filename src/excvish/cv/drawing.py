@@ -1,8 +1,8 @@
 import cv2
 import numpy as np
 
-from cvexish import clip
-from cvexish.types import BBox
+from excvish import clip
+from excvish.types import BBox
 
 
 def crop_frame(frame: np.ndarray, bbox: BBox) -> np.ndarray:
@@ -26,9 +26,19 @@ def crop_frame(frame: np.ndarray, bbox: BBox) -> np.ndarray:
 
     return frame[y1:y2, x1:x2, :]
 
-def choose_text_color_bgr(background_color_bgr):
+
+def choose_text_color_bgr(background_color_bgr: tuple[int, int, int] | None) -> tuple[int, int, int]:
+    """
+    Choose black or white text color based on the background color for better visibility.
+    Args:
+        background_color_bgr: Background color in BGR format.
+    Returns:
+        Text color in BGR format (either black or white).
+    """
+    if background_color_bgr is None:
+        return (255, 255, 255)
+
     b, g, r = background_color_bgr
-    # 輝度計算式のRGBをBGRに対応
     luminance = 0.299 * r + 0.587 * g + 0.114 * b
     return (0, 0, 0) if luminance > 128 else (255, 255, 255)
 
@@ -37,7 +47,7 @@ def draw_text(
     frame: np.ndarray,
     text: str,
     position: tuple[int, int],
-    background_color: tuple[int, int, int] | tuple[int, ...] = (28, 28, 28),
+    background_color: tuple[int, int, int] | None = (28, 28, 28),
 ) -> None:
     """
     Draw text on an image frame at the specified position
@@ -58,7 +68,7 @@ def draw_text(
 
     x1, y1 = position
     w, h = cv2.getTextSize(text, 0, font_scale, thickness)[0]
-    h += 3 # padding
+    h += 3  # padding
 
     if x1 > image_width - w:
         x1 = image_width - w
@@ -76,8 +86,9 @@ def draw_text(
 
     text_color = choose_text_color_bgr(background_color)
 
-    # Fill rectangle for text background
-    cv2.rectangle(frame, (x1, y1), (x2, y2), background_color, -1, cv2.LINE_AA)
+    if background_color is not None:
+        # Fill rectangle for text background
+        cv2.rectangle(frame, (x1, y1), (x2, y2), background_color, -1, cv2.LINE_AA)
 
     # Put text on the frame
     cv2.putText(frame, text, (x1, y1), font, font_scale, text_color, thickness)
