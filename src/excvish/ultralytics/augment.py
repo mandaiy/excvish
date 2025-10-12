@@ -9,6 +9,7 @@ utility transforms that resize inputs without breaking detection targets.
 import random
 from typing import Any
 
+import albumentations as A
 import cv2
 import numpy as np
 from ultralytics.utils.instance import Instances
@@ -33,7 +34,7 @@ class Albumentations:
             labels.
     """
 
-    def __init__(self, transform, p: float = 1.0):
+    def __init__(self, transform: A.Compose, p: float = 1.0):
         self.p = p
         self.transform = transform
         self.contains_spatial = exA.has_dual_transform(self.transform)
@@ -52,7 +53,7 @@ class Albumentations:
 
         kwargs = {}
 
-        W, H = im.shape[1], im.shape[0]
+        orig_w, orig_h = im.shape[1], im.shape[0]
         instances: Instances = labels["instances"]
         existing_cls = labels.get("cls")
         cls_dtype = np.asarray(existing_cls).dtype if existing_cls is not None else None
@@ -62,8 +63,8 @@ class Albumentations:
             kpts = instances.keypoints
             _, k, dim = kpts.shape
             # Flatten to (N*K, 2) for xy coordinates
-            xs = np.clip(kpts[..., 0], 0, W - 1)
-            ys = np.clip(kpts[..., 1], 0, H - 1)
+            xs = np.clip(kpts[..., 0], 0, orig_w - 1)
+            ys = np.clip(kpts[..., 1], 0, orig_h - 1)
             keypoints = np.stack([xs, ys], axis=-1).reshape(-1, dim - 1)
             kwargs["keypoints"] = keypoints
         else:
@@ -71,7 +72,7 @@ class Albumentations:
             k, dim = None, None
 
         instances.convert_bbox("xywh")
-        instances.normalize(W, H)
+        instances.normalize(orig_w, orig_h)
 
         kwargs["bboxes"] = instances.bboxes
         kwargs["class_labels"] = labels["cls"]
@@ -80,29 +81,33 @@ class Albumentations:
         # Apply transform
         new = self.transform(**kwargs)
 
-        if len(new["class_labels"]) > 0:  # skip update if no bbox in new im
-            labels["img"] = new["image"]
-            cls = (
-                np.asarray(new["class_labels"], dtype=cls_dtype)
-                if cls_dtype is not None
-                else np.asarray(new["class_labels"])
-            )
-            labels["cls"] = cls
-            bboxes = np.array(new["bboxes"], dtype=np.float32)
+        # Return original if no objects returned
+        if len(new["class_labels"]) == 0:
+            return labels
 
-            # Update keypoints if they were transformed
-            if "keypoints" in new:
-                assert k is not None and dim is not None
-                kpts = new["keypoints"] / np.array([W, H])  # Normalize to [0, 1]
-                kpts = kpts.reshape(-1, k, dim - 1)
-                original_visibility = instances.keypoints[..., 2].reshape(-1, k, 1)
+        new_w, new_h = new["image"].shape[1], new["image"].shape[0]
 
-                keypoints = np.concatenate([kpts, original_visibility], axis=-1).astype(np.float32)
-            else:
-                keypoints = None
+        labels["img"] = new["image"]
+        cls = (
+            np.asarray(new["class_labels"], dtype=cls_dtype)
+            if cls_dtype is not None
+            else np.asarray(new["class_labels"])
+        )
+        labels["cls"] = cls
+        bboxes = np.array(new["bboxes"], dtype=np.float32)
 
-            instances.update(bboxes=bboxes, keypoints=keypoints)
-            instances.cls = cls
+        # Update keypoints if they were transformed
+        if "keypoints" in new:
+            assert k is not None and dim is not None
+            kpts = new["keypoints"] / np.array([new_w, new_h])  # Normalize to [0, 1]
+            kpts = kpts.reshape(-1, k, dim - 1)
+            original_visibility = instances.keypoints[..., 2].reshape(-1, k, 1)
+
+            keypoints = np.concatenate([kpts, original_visibility], axis=-1).astype(np.float32)
+        else:
+            keypoints = None
+
+        instances.update(bboxes=bboxes, keypoints=keypoints)
 
         return labels
 
