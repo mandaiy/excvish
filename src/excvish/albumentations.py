@@ -23,7 +23,7 @@ def has_dual_transform(transform: TransformType) -> bool:
         ValueError: If ``transform`` is neither a ``BasicTransform`` instance nor
             an ``albumentations`` composition.
     """
-    if not isinstance(transform, (A.BasicTransform, A.BaseCompose)):
+    if not isinstance(transform, A.BasicTransform | A.BaseCompose):
         raise ValueError(f"Unexpected transform type: {type(transform)}")
 
     if isinstance(transform, A.BasicTransform):

@@ -7,7 +7,7 @@ utility transforms that resize inputs without breaking detection targets.
 """
 
 import random
-from typing import Any, Literal
+from typing import Any
 
 import cv2
 import numpy as np
