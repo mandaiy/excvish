@@ -35,11 +35,25 @@ class Albumentations:
     """
 
     def __init__(self, transform: A.Compose, p: float = 1.0):
+        """Store wrapped transform and application probability.
+
+        Args:
+            transform: Albumentations transform or composition to apply.
+            p: Probability of applying the transform per sample.
+        """
         self.p = p
         self.transform = transform
         self.contains_spatial = exA.has_dual_transform(self.transform)
 
     def __call__(self, labels: dict[str, Any]) -> dict[str, Any]:
+        """Apply the wrapped transform to a Ultralytics label dictionary.
+
+        Args:
+            labels: Sample dictionary containing ``img``, ``instances``, and ``cls``.
+
+        Returns:
+            Transformed sample dictionary.
+        """
         if self.transform is None or random.random() > self.p:
             return labels
 
@@ -107,7 +121,10 @@ class Albumentations:
         else:
             keypoints = None
 
-        instances.update(bboxes=bboxes, keypoints=keypoints)
+        if keypoints is None:
+            instances.update(bboxes=bboxes)
+        else:
+            instances.update(bboxes=bboxes, keypoints=keypoints)
 
         return labels
 
@@ -125,11 +142,25 @@ class AspectPreservingResize:
     """
 
     def __init__(self, height: int, width: int) -> None:
+        """Initialize resize target.
+
+        Args:
+            height: Target canvas height.
+            width: Target canvas width.
+        """
         self.target_h = height
         self.target_w = width
         self.target_aspect_ratio = width / height
 
     def __call__(self, data: dict[str, Any]) -> dict[str, Any]:
+        """Resize and pad image while updating associated instances.
+
+        Args:
+            data: Sample dictionary containing ``img`` and ``instances``.
+
+        Returns:
+            Updated sample dictionary after resize and padding.
+        """
         assert "img" in data, "img not found in data"
         assert "instances" in data, "instances not found in data"
 

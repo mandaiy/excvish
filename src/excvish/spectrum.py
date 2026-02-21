@@ -1,17 +1,17 @@
+"""Spectral analysis utilities."""
+
 import numpy as np
 
 
 def spectral_angle_mapper(image_array: np.ndarray, reference_spectrum: np.ndarray) -> np.ndarray:
-    """Calculates the Spectral Angle Mapper (SAM) for all pixels in the image
-    relative to the reference_spectrum.
+    """Compute Spectral Angle Mapper (SAM) against a reference spectrum.
 
-    Parameters:
-    - image_array: numpy array of shape (h, w, b) representing the spectral image.
-    - x: int, x-coordinate of the reference pixel.
-    - y: int, y-coordinate of the reference pixel.
+    Args:
+        image_array: Spectral image array with shape ``(H, W, B)``.
+        reference_spectrum: Reference spectrum with shape ``(B,)``.
 
     Returns:
-        sam_array: numpy array of shape (h, w) with SAM values for each pixel.
+        SAM angle map in radians with shape ``(H, W)``.
     """
     # Calculate the norms of the reference spectrum
     reference_norm = float(np.linalg.norm(reference_spectrum))

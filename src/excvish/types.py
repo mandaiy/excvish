@@ -1,3 +1,5 @@
+"""Shared data types for excvish."""
+
 from dataclasses import dataclass
 from typing import Self
 
@@ -29,7 +31,7 @@ class BBox:
 
     @classmethod
     def from_xyxy_array(cls, arr: list[int]) -> Self:
-        """Creates a BBox from a list of coordinates.
+        """Create a bounding box from XYXY coordinates.
 
         Args:
             arr: A list containing [x1, y1, x2, y2] coordinates.
@@ -41,7 +43,7 @@ class BBox:
 
     @classmethod
     def sort_by_x(cls, bboxes: list[Self]) -> list[Self]:
-        """Sorts a list of BBoxes by their left x-coordinate.
+        """Sort bounding boxes by left x-coordinate.
 
         Args:
             bboxes: A list of BBox instances to sort.
@@ -52,7 +54,7 @@ class BBox:
         return sorted(bboxes, key=lambda bbox: bbox.x1)
 
     def offset_y(self, y: int) -> "BBox":
-        """Creates a new BBox with vertical offset applied to both y-coordinates.
+        """Apply a vertical offset to both y-coordinates.
 
         Args:
             y: The vertical offset to apply.
@@ -63,7 +65,7 @@ class BBox:
         return BBox(x1=self.x1, y1=self.y1 - y, x2=self.x2, y2=self.y2 - y)
 
     def shift_y1(self, dy: int) -> "BBox":
-        """Creates a new BBox with an offset applied only to the top y-coordinate.
+        """Shift only the top y-coordinate by ``dy``.
 
         Args:
             dy: The vertical offset to apply to y1.
@@ -74,7 +76,7 @@ class BBox:
         return BBox(x1=self.x1, y1=self.y1 - dy, x2=self.x2, y2=self.y2)
 
     def shift_x1(self, dx: int) -> "BBox":
-        """Creates a new BBox with an offset applied only to the left x-coordinate.
+        """Shift only the left x-coordinate by ``dx``.
 
         Args:
             dx: The horizontal offset to apply to x1.
@@ -85,7 +87,7 @@ class BBox:
         return BBox(x1=self.x1 + dx, y1=self.y1, x2=self.x2, y2=self.y2)
 
     def shift_x2(self, dx: int) -> "BBox":
-        """Creates a new BBox with an offset applied only to the right x-coordinate.
+        """Shift only the right x-coordinate by ``dx``.
 
         Args:
             dx: The horizontal offset to apply to x2.
@@ -96,7 +98,7 @@ class BBox:
         return BBox(x1=self.x1, y1=self.y1, x2=self.x2 + dx, y2=self.y2)
 
     def as_xyxy_array(self) -> list[int]:
-        """Converts the BBox to a list of coordinates.
+        """Convert the bounding box to an ``[x1, y1, x2, y2]`` list.
 
         Returns:
             A list of integers [x1, y1, x2, y2].
@@ -104,14 +106,14 @@ class BBox:
         return [int(c) for c in [self.x1, self.y1, self.x2, self.y2]]
 
     def scale(self, a: float) -> "BBox":
-        """
-        Returns a new BBox of a rectangle with area scaled by factor 'a'.
+        """Scale box area by factor ``a`` around its center.
 
-        Parameters:
-            a: Area scaling factor (e.g., 2.0 to double the area, 0.5 to halve it)
+        Args:
+            a: Area scaling factor. For example, ``2.0`` doubles area and
+                ``0.5`` halves area.
 
         Returns:
-            BBox: A new BBox with the area scaled by factor 'a'.
+            A scaled bounding box.
         """
         # Calculate the center point of the current bbox
         center_x = (self.x1 + self.x2) / 2

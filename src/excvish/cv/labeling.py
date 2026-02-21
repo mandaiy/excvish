@@ -1,9 +1,11 @@
+"""Connected-component labeling and visualization utilities."""
+
 import cv2
 import numpy as np
 
 
 def remove_smaller_components(image: np.ndarray, area_thresh: int) -> np.ndarray:
-    """Removes connected components whose area is smaller than or equal to the threshold.
+    """Remove connected components smaller than ``area_thresh``.
 
     Args:
         image (np.ndarray): Binary image.
@@ -19,7 +21,7 @@ def remove_smaller_components(image: np.ndarray, area_thresh: int) -> np.ndarray
 
 
 def remove_larger_components(image: np.ndarray, area_thresh: int) -> np.ndarray:
-    """Removes connected components whose area is larger than the threshold.
+    """Remove connected components larger than ``area_thresh``.
 
     Args:
         image (np.ndarray): Binary image.
@@ -85,14 +87,11 @@ def color_labels(labels: np.ndarray, color_distance_threshold: float = 60.0) -> 
     color_map[0] = (0, 0, 0)
 
     def color_distance(c1: np.ndarray, c2: np.ndarray) -> np.ndarray:
-        """Euclidean distance in BGR space"""
+        """Compute Euclidean distance in BGR space."""
         return np.sqrt(np.sum((c1 - c2) ** 2))
 
     def can_use_color(candidate_color: np.ndarray, assigned_neighbors: list) -> bool:
-        """
-        Determines if candidate_color is sufficiently distant from
-        the colors of already assigned adjacent labels
-        """
+        """Check whether candidate color is far enough from adjacent labels."""
         for neighbor_label in assigned_neighbors:
             dist = color_distance(candidate_color, color_map[neighbor_label])
             if dist < color_distance_threshold:
