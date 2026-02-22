@@ -1,4 +1,6 @@
-from typing import Literal
+"""Similarity metrics for image and mask analysis."""
+
+from typing import Literal, cast
 
 import cv2
 import numpy as np
@@ -7,8 +9,7 @@ from skimage.metrics import structural_similarity as ssim
 
 
 def chamfer_distance(image1: np.ndarray, image2: np.ndarray) -> float:
-    """
-    Calculate the Chamfer distance between two binary images.
+    """Calculate the Chamfer distance between two binary images.
 
     The Chamfer distance is a metric that measures the similarity between two sets of points
     by computing the average of the minimum distances from each point in one set to the
@@ -41,7 +42,18 @@ def chamfer_distance(image1: np.ndarray, image2: np.ndarray) -> float:
     return float(np.mean(d1) + np.mean(d2))
 
 
-def symmetricality_ssim(image: np.ndarray, direction: Literal["horizontal", "vertical"] = "horizontal") -> float:
+def symmetricality_ssim(
+    image: np.ndarray, direction: Literal["horizontal", "vertical"] = "horizontal"
+) -> float:
+    """Compute symmetry score using SSIM.
+
+    Args:
+        image: Input image (grayscale or BGR).
+        direction: Axis for symmetry comparison.
+
+    Returns:
+        SSIM score between mirrored halves.
+    """
     if len(image.shape) == 3:
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     h, w = image.shape
@@ -53,7 +65,7 @@ def symmetricality_ssim(image: np.ndarray, direction: Literal["horizontal", "ver
             l = image[:, :mid]
             r = np.fliplr(image[:, pad + mid :])
 
-            return float(ssim(l, r))
+            return cast(float, ssim(l, r))
 
         case "vertical":
             pad = 1 if h % 2 == 1 else 0
@@ -61,7 +73,7 @@ def symmetricality_ssim(image: np.ndarray, direction: Literal["horizontal", "ver
             t = image[:mid, :]
             b = np.flipud(image[pad + mid :, :])
 
-            return float(ssim(t, b))
+            return cast(float, ssim(t, b))
 
         case _:
             raise NotImplementedError(f"Not implemented yet: {direction}")  # type: ignore[unreachable]
@@ -70,6 +82,15 @@ def symmetricality_ssim(image: np.ndarray, direction: Literal["horizontal", "ver
 def symmetricality_chamfer_distance(
     image: np.ndarray, direction: Literal["horizontal", "vertical"] = "horizontal"
 ) -> float:
+    """Compute symmetry score using Chamfer distance.
+
+    Args:
+        image: Input image (grayscale or BGR).
+        direction: Axis for symmetry comparison.
+
+    Returns:
+        Chamfer distance between mirrored halves.
+    """
     if len(image.shape) == 3:
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     h, w = image.shape

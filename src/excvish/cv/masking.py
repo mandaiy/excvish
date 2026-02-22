@@ -1,8 +1,10 @@
+"""Mask conversion utilities."""
+
 import numpy as np
 
 
 def binary_image_from_mask(mask: np.ndarray, value: int = 255) -> np.ndarray:
-    """Converts a mask to a binary image.
+    """Convert a boolean mask to a binary image.
 
     Args:
         mask (np.ndarray): Mask array whose elements are boolean.
@@ -16,7 +18,7 @@ def binary_image_from_mask(mask: np.ndarray, value: int = 255) -> np.ndarray:
 
 
 def image_from_mask(mask: np.ndarray, rgb: tuple[int, int, int] = (255, 255, 255)) -> np.ndarray:
-    """Converts a mask to an RGB image.
+    """Convert a boolean mask to an RGB image.
 
     Args:
         mask (np.ndarray): Mask array whose elements are boolean.

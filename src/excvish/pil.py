@@ -1,14 +1,20 @@
+"""PIL-based image utilities."""
+
+import random
+
+import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
 
 def concat_image_on_grid(images: list[Image.Image], columns: int) -> Image.Image:
-    """Concatenates multiple images into a grid.
+    """Concatenate multiple images into a grid.
 
     Args:
-        images (list[Image.Image]): List of images to concatenate.
-        columns (int): Number of columns in the grid.
-    Result:
-        Image: The concatenated grid
+        images: Images to concatenate. All images must have the same size.
+        columns: Number of columns in the grid.
+
+    Returns:
+        The concatenated grid image.
     """
     assert all(images[0].size == i.size for i in images[1:])
 
@@ -27,10 +33,7 @@ def resize_and_pad(
     target_height: int,
     color: tuple[int, int, int] = (255, 255, 255),
 ) -> Image.Image:
-    """
-    Resize an image to fit within target dimensions, preserving aspect ratio.
-    If the image is smaller than the target size, it is padded with the specified color.
-    If the image is larger, it is shrunk while retaining aspect ratio.
+    """Resize an image to fit target dimensions while preserving aspect ratio.
 
     Args:
         image (PIL.Image.Image): Input image.
@@ -86,15 +89,16 @@ def text_image(
     """Create an image with text centered in the middle.
 
     Args:
-        text (str): The text to draw.
-        width (int): Width of the image.
-        height (int): Height of the image.
-        background_color (str): Background color of the image.
-        text_color (str): Text color.
-        font_size (int): Font size.
-        font_name (str): Path to the font file. Default is "ヒラギノ丸ゴ ProN W4.ttc".
-    Result:
-        Image: The generated image.
+        text: The text to draw.
+        width: Width of the image.
+        height: Height of the image.
+        background_color: Background color of the image.
+        text_color: Text color.
+        font_size: Font size.
+        font_name: Path to the font file. If ``None``, default PIL font is used.
+
+    Returns:
+        The generated image.
     """
     image = Image.new("RGB", (width, height), color=background_color)
     draw = ImageDraw.Draw(image)
@@ -113,3 +117,49 @@ def text_image(
     draw.text((text_x, text_y), text, fill=text_color, font=font, size=font_size)
 
     return image
+
+
+def extract_rgb_alpha(
+    image: Image.Image, size: tuple[int, int] | None = None
+) -> tuple[np.ndarray, np.ndarray | None]:
+    """Extract RGB pixels and optional alpha channel from a PIL image.
+
+    Args:
+        image: Input PIL image.
+        size: Optional resize target as ``(width, height)``.
+
+    Returns:
+        A tuple of ``(rgb, alpha)`` where ``rgb`` is an ``(H, W, 3)`` array and
+        ``alpha`` is either an ``(H, W)`` array or ``None``.
+    """
+    if size is not None:
+        image = image.resize(size, Image.Resampling.LANCZOS)
+    has_transparency = image.mode in ("RGBA", "LA") or (
+        image.mode == "P" and "transparency" in image.info
+    )
+    if has_transparency:
+        rgba = np.array(image.convert("RGBA"))
+        return rgba[..., :3], rgba[..., 3]
+    rgb = np.array(image.convert("RGB"))
+    return rgb, None
+
+
+def apply_random_background(
+    pil_img: Image.Image,
+    rng: random.Random | None = None,
+) -> Image.Image:
+    """Composite an RGBA PIL image over a random RGB background.
+
+    Args:
+        pil_img: Input PIL image.
+        rng: Optional random generator for deterministic background colors.
+
+    Returns:
+        RGB PIL image after alpha compositing.
+    """
+    if pil_img.mode != "RGBA":
+        return pil_img.convert("RGB")
+    rand = rng or random
+    bg_color = tuple(rand.randint(0, 255) for _ in range(3))
+    background = Image.new("RGBA", pil_img.size, bg_color + (255,))
+    return Image.alpha_composite(background, pil_img).convert("RGB")

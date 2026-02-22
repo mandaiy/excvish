@@ -1,37 +1,19 @@
+"""Drawing helpers for NumPy/OpenCV images."""
+
 import cv2
 import numpy as np
 
-from excvish import clip
-from excvish.types import BBox
+from excvish import BBox
 
 
-def crop_frame(frame: np.ndarray, bbox: BBox) -> np.ndarray:
-    """
-    Crop the frame based on the bounding box.
+def choose_text_color_bgr(
+    background_color_bgr: tuple[int, int, int] | None,
+) -> tuple[int, int, int]:
+    """Choose black or white text color based on the background color for better visibility.
 
-    Args:
-        frame: The input image frame to be cropped.
-        bbox: The bounding box instance.
-
-    Returns:
-        The cropped portion of the frame according to the bounding box.
-    """
-    h, w, _ = frame.shape
-
-    x1, y1, x2, y2 = [int(v) for v in bbox.as_xyxy_array()]
-    x1 = clip(x1, 0, w)
-    x2 = clip(x2, 0, w)
-    y1 = clip(y1, 0, h)
-    y2 = clip(y2, 0, h)
-
-    return frame[y1:y2, x1:x2, :]
-
-
-def choose_text_color_bgr(background_color_bgr: tuple[int, int, int] | None) -> tuple[int, int, int]:
-    """
-    Choose black or white text color based on the background color for better visibility.
     Args:
         background_color_bgr: Background color in BGR format.
+
     Returns:
         Text color in BGR format (either black or white).
     """
@@ -49,13 +31,13 @@ def draw_text(
     position: tuple[int, int],
     background_color: tuple[int, int, int] | None = (28, 28, 28),
 ) -> None:
-    """
-    Draw text on an image frame at the specified position
+    """Draw text on an image frame at the specified position.
 
     Args:
-        frame: NumPy array representing the image frame
-        text: String to be drawn on the image
-        position: Tuple of (x, y) coordinates for the text position
+        frame: NumPy array representing the image frame.
+        text: String to draw on the image.
+        position: Tuple of ``(x, y)`` coordinates for text origin.
+        background_color: Optional BGR background color behind text.
     """
     # Check if frame is valid
     if frame is None or frame.size == 0:
@@ -101,14 +83,14 @@ def draw_bbox(
     thickness: int = 2,
     line_type: int = cv2.LINE_AA,
 ) -> None:
-    """
-    Draw a bounding box on an image frame.
+    """Draw a bounding box on an image frame.
 
     Args:
         frame: The input image frame.
         bbox: The bounding box instance.
         color: Color of the bounding box in BGR format.
         thickness: Thickness of the bounding box lines.
+        line_type: OpenCV line type.
     """
     x1, y1, x2, y2 = [int(v) for v in bbox.as_xyxy_array()]
     cv2.rectangle(frame, (x1, y1), (x2, y2), color, thickness)

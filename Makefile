@@ -8,3 +8,7 @@ lint:
 	@uv run ruff format --check
 	@uv run ruff check
 	@uv run ty check src
+
+.PHONY: test
+test:
+	@uv run pytest -q

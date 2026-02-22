@@ -1,7 +1,7 @@
 [project]
 name = "excvish"
 version = "0.3.0"
-description = "Extension of Computer Vision Image Segmentation Hyper-spectral image"
+description = "Extension of Computer Vision, Image Segmentation, and Hyper-spectral image"
 readme = "README.md"
 authors = [
     { name = "Yusaku Mandai", email = "yusaku.mandai.02@gmail.com" }
@@ -23,6 +23,8 @@ dependencies = [
 dev = [
     "mypy>=1.15.0",
     "pre-commit>=4.1.0",
+    "pydoclint>=0.8.3",
+    "pytest>=9.0.2",
     "ruff>=0.9.7",
     "scipy-stubs>=1.16.0.2",
     "tox>=4.24.1",
@@ -34,28 +36,26 @@ dev = [
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
-[tool.mypy]
-
 [tool.ruff]
-exclude = [
-]
-
 target-version = "py311"
-line-length = 119
+line-length = 99
 indent-width = 4
 
 [tool.ruff.lint]
-extend-select = ["I"]
-
 select = [
-    "E",  # pycodestyle errors
-    "W",  # pycodestyle warnings
-    "F",  # pyflakes
-    "I",  # isort
-    "B",  # flake8-bugbear
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
     "C4",  # flake8-comprehensions
     "UP",  # pyupgrade
+    "D",   # pydocstyle
+    "D401",
 ]
 ignore = [
-    "E741"
+    "E741" # ambiguous-variable-name
 ]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
