@@ -71,6 +71,7 @@ class AlignLongEdgeHorizontal(DualTransform):
             border_mode=cv2.BORDER_CONSTANT,
             border_value=self.mask_value,
             expand=True,
+            interpolation=cv2.INTER_NEAREST,
         )
 
     def get_params_dependent_on_data(self, params: dict, data: dict) -> dict:
@@ -83,6 +84,11 @@ class AlignLongEdgeHorizontal(DualTransform):
         Returns:
             Parameter dictionary containing rotation angle.
         """
+        if data.get("bboxes") is not None:
+            raise NotImplementedError("AlignLongEdgeHorizontal does not support bboxes.")
+        if data.get("keypoints") is not None:
+            raise NotImplementedError("AlignLongEdgeHorizontal does not support keypoints.")
+
         mask = data.get("mask")
         if mask is None:
             return {"angle": 0}

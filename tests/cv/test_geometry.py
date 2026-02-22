@@ -76,6 +76,16 @@ def test_rotate_image_constant_border_value() -> None:
     assert rotated[0, 0] == 7
 
 
+def test_rotate_image_with_nearest_keeps_binary_mask_values() -> None:
+    """Nearest interpolation should keep binary masks as binary values."""
+    mask = np.zeros((7, 7), dtype=np.uint8)
+    mask[2:5, 2:5] = 255
+
+    rotated = geometry.rotate_image(mask, angle=33.0, interpolation=cv2.INTER_NEAREST, expand=True)
+
+    assert set(np.unique(rotated)).issubset({0, 255})
+
+
 def test_rotate_rgba_by_mask_long_edge_returns_original_when_no_foreground() -> None:
     """Empty alpha mask should return original image and zero mask."""
     image = np.zeros((4, 4, 4), dtype=np.uint8)
@@ -124,7 +134,7 @@ def test_rotate_rgba_by_mask_long_edge_rotates_image_and_mask(
     )
     monkeypatch.setattr(geometry, "compute_horizontal_rotation_angle", lambda _rect: 90.0)
 
-    calls: list[tuple[float, int | tuple[int, ...], bool]] = []
+    calls: list[tuple[float, int | tuple[int, ...], bool, int]] = []
 
     def fake_rotate_image(
         array: np.ndarray,
@@ -132,8 +142,9 @@ def test_rotate_rgba_by_mask_long_edge_rotates_image_and_mask(
         border_mode: int,
         border_value: int | tuple[int, ...],
         expand: bool,
+        interpolation: int = cv2.INTER_LINEAR,
     ) -> np.ndarray:
-        calls.append((angle, border_value, expand))
+        calls.append((angle, border_value, expand, interpolation))
         if array.ndim == 3:
             return rotated_rgba
         return rotated_mask
@@ -144,4 +155,7 @@ def test_rotate_rgba_by_mask_long_edge_rotates_image_and_mask(
 
     assert np.array_equal(actual_image, rotated_rgba)
     assert np.array_equal(actual_mask, rotated_mask)
-    assert calls == [(90.0, (0, 0, 0, 0), True), (90.0, 0, True)]
+    assert calls == [
+        (90.0, (0, 0, 0, 0), True, cv2.INTER_LINEAR),
+        (90.0, 0, True, cv2.INTER_NEAREST),
+    ]

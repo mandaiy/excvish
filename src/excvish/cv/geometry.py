@@ -81,6 +81,7 @@ def rotate_image(
     border_mode: int = cv2.BORDER_CONSTANT,
     border_value: int | tuple[int, ...] = 0,
     expand: bool = True,
+    interpolation: int = cv2.INTER_LINEAR,
 ) -> np.ndarray:
     """Rotate an image by a given angle.
 
@@ -90,6 +91,7 @@ def rotate_image(
         border_mode: OpenCV border mode.
         border_value: Constant border fill value.
         expand: If True, resize output to contain full rotated image.
+        interpolation: OpenCV interpolation flag.
 
     Returns:
         Rotated image array.
@@ -112,7 +114,7 @@ def rotate_image(
         image,
         rotation_matrix,
         (new_w, new_h),
-        flags=cv2.INTER_LINEAR,
+        flags=interpolation,
         borderMode=border_mode,
         borderValue=border_value,
     )
@@ -148,6 +150,7 @@ def rotate_rgba_by_mask_long_edge(image: np.ndarray) -> tuple[np.ndarray, np.nda
         border_mode=cv2.BORDER_CONSTANT,
         border_value=0,
         expand=True,
+        interpolation=cv2.INTER_NEAREST,
     )
     return rotated, rotated_mask
 
