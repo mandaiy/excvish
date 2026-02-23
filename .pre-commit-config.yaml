@@ -5,14 +5,19 @@ repos:
   rev: v3.2.0
   hooks:
   - id: trailing-whitespace
+    exclude: \.(md|markdown)$
   - id: end-of-file-fixer
   - id: check-yaml
   - id: check-added-large-files
 - repo: local
   hooks:
-  - id: tox-check
-    name: tox-check
-    language: python
-    entry: uv run tox run-parallel --skip-env format
+  - id: make-lint
+    name: make lint
+    entry: make lint
+    language: system
     pass_filenames: false
-    types: [file, python]
+  - id: commitlint
+    name: commitlint (commit message)
+    entry: npx --no -- commitlint --edit
+    language: system
+    stages: [commit-msg]

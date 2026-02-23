@@ -19,5 +19,6 @@
 ## Checklist
 
 - [ ] I updated relevant documentation under `docs/`.
+- [ ] PR title follows Conventional Commits (e.g., `feat: ...`, `fix: ...`).
 - [ ] I verified that the changes are backward compatible, or documented breaking changes.
 - [ ] I confirmed this PR is ready for review.

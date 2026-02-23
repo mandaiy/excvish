@@ -8,6 +8,9 @@ Use it as the default placement rule for new code.
 - `src/excvish/`: main package source code.
 - `docs/`: repository documentation and development rules.
 - `pyproject.toml`: dependencies, lint/type settings, and build configuration.
+- `.pre-commit-config.yaml`: pre-commit hooks for file checks plus commit-msg lint (`make lint`, `commitlint`).
+- `commitlint.config.cjs`: commit message/PR title lint rules (Conventional Commits).
+- `.github/workflows/`: CI workflows, including PR title lint for squash-merge safety.
 
 ## Package-level modules (`src/excvish`)
 
