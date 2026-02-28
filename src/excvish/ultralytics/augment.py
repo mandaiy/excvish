@@ -6,7 +6,6 @@ preserving alignment between images and geometric annotations. They also expose
 utility transforms that resize inputs without breaking detection targets.
 """
 
-import random
 from typing import Any
 
 import albumentations as A
@@ -29,19 +28,14 @@ class Albumentations:
         transform: Albumentations transform or composition executed on the data
             sample. It must accept the same targets exposed by the Ultralytics
             dataloader (e.g., image, bboxes, keypoints).
-        p: Probability with which the wrapped transform is applied to each
-            sample. A lower value increases the chance of returning untouched
-            labels.
     """
 
-    def __init__(self, transform: A.Compose, p: float = 1.0):
-        """Store wrapped transform and application probability.
+    def __init__(self, transform: A.Compose):
+        """Store wrapped transform.
 
         Args:
             transform: Albumentations transform or composition to apply.
-            p: Probability of applying the transform per sample.
         """
-        self.p = p
         self.transform = transform
         self.contains_spatial = exA.has_dual_transform(self.transform)
 
@@ -54,7 +48,7 @@ class Albumentations:
         Returns:
             Transformed sample dictionary.
         """
-        if self.transform is None or random.random() > self.p:
+        if self.transform is None:
             return labels
 
         im = labels["img"]
