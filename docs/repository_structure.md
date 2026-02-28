@@ -10,7 +10,8 @@ Use it as the default placement rule for new code.
 - `pyproject.toml`: dependencies, lint/type settings, and build configuration.
 - `.pre-commit-config.yaml`: pre-commit hooks for file checks plus commit-msg lint (`make lint`, `commitlint`).
 - `commitlint.config.cjs`: commit message/PR title lint rules (Conventional Commits).
-- `.github/workflows/`: CI workflows, including PR title lint for squash-merge safety.
+- `.github/workflows/`: CI and release workflows, including PR title lint plus `release-prepare`/`release-publish`.
+- `docs/release_process.md`: release workflow and PR-based release process.
 
 ## Package-level modules (`src/excvish`)
 

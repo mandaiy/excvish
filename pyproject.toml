@@ -1,6 +1,6 @@
 [project]
 name = "excvish"
-version = "0.3.0"
+version = "0.5.1"
 description = "Extension of Computer Vision, Image Segmentation, and Hyper-spectral image"
 readme = "README.md"
 authors = [
