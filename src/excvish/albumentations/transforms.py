@@ -187,19 +187,23 @@ class ShadesOfGray(ImageOnlyTransform):
         super().__init__(p=p)
         self.p_norm_range = p_norm_range
 
-    def apply(self, img: np.ndarray, **params) -> np.ndarray:
+    def apply(self, img: np.ndarray, p_norm: float = 6.0, **params) -> np.ndarray:
         """Apply shades-of-gray color constancy.
 
         Args:
             img: Input image.
+            p_norm: Sampled Minkowski norm value.
             **params: Additional Albumentations parameters.
 
         Returns:
             Color-adjusted image.
         """
-        p_min, p_max = self.p_norm_range
-        p_norm = float(np.random.uniform(p_min, p_max))
         return apply_shades_of_gray(img, p_norm)
+
+    def get_params(self) -> dict[str, float]:
+        """Sample transform parameters from Albumentations-managed RNG."""
+        p_min, p_max = self.p_norm_range
+        return {"p_norm": float(self.random_generator.uniform(p_min, p_max))}
 
     def get_transform_init_args_names(self) -> tuple[str, ...]:
         """Return constructor argument names for serialization."""
