@@ -86,7 +86,7 @@ Use it as the default placement rule for new code.
 
 - Adapter layer for Hugging Face Datasets and vision model utilities.
 - Responsibilities:
-  - dataset splitting, label projection, and label schema helpers,
+  - dataset splitting and lightweight label filtering helpers,
   - image processor size resolution,
   - vision model forward-argument helpers.
 - Keep Hugging Face-specific imports out of generic `cv/`, `torch/`, and

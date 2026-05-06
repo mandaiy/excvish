@@ -1,80 +1,10 @@
 """Hugging Face Datasets helpers for image classification workflows."""
 
-from collections.abc import Sequence
-from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
-from datasets import ClassLabel, Dataset, DatasetDict, load_dataset
+from datasets import Dataset, DatasetDict, load_dataset
 from sklearn.model_selection import StratifiedGroupKFold
-
-
-@dataclass(frozen=True)
-class LabelScheme:
-    """Describe a stable target label space and how source labels are projected into it."""
-
-    name: str
-    label_mapping: dict[str, str]
-    target_labels: list[str]
-
-    def __post_init__(self) -> None:
-        """Validate the mapping once so callers can rely on consistent scheme metadata."""
-        if not self.name:
-            raise ValueError("Label scheme name must not be empty.")
-        if not self.target_labels:
-            raise ValueError("Label scheme must define at least one target label.")
-        if len(set(self.target_labels)) != len(self.target_labels):
-            raise ValueError("Label scheme target labels must be unique.")
-        unknown_targets = sorted(set(self.label_mapping.values()) - set(self.target_labels))
-        if unknown_targets:
-            unknown_display = ", ".join(unknown_targets)
-            raise ValueError(
-                f"Label scheme '{self.name}' maps to unknown target labels: {unknown_display}"
-            )
-
-    def remap_label(self, source_label: str) -> str | None:
-        """Return the mapped target label or None when the row should be dropped."""
-        return self.label_mapping.get(source_label)
-
-
-def build_identity_label_scheme(target_labels: Sequence[str], name: str) -> LabelScheme:
-    """Create a scheme that keeps a selected label subset while preserving the requested order."""
-    labels = [str(label) for label in target_labels]
-    return LabelScheme(
-        name=name,
-        label_mapping={label: label for label in labels},
-        target_labels=labels,
-    )
-
-
-def ensure_label_scheme_targets(label_scheme: LabelScheme, target_labels: Sequence[str]) -> None:
-    """Check that expected target labels exactly match the scheme order used by a model."""
-    expected = list(label_scheme.target_labels)
-    actual = [str(label) for label in target_labels]
-    if expected != actual:
-        raise ValueError(
-            f"Label scheme '{label_scheme.name}' expects target labels "
-            f"{expected}, but received {actual}."
-        )
-
-
-def remap_dataset_labels(
-    ds: Dataset | DatasetDict, label_scheme: LabelScheme
-) -> Dataset | DatasetDict:
-    """Rewrite labels, drop unmapped rows, and attach a deterministic ClassLabel schema."""
-
-    def _remap(dataset: Dataset) -> Dataset:
-        remapped = dataset.map(
-            lambda record: {"label": label_scheme.remap_label(str(record["label"]))}
-        )
-        filtered = remapped.filter(lambda record: record["label"] is not None)
-        return filtered.cast_column("label", ClassLabel(names=label_scheme.target_labels))
-
-    if isinstance(ds, DatasetDict):
-        return DatasetDict({split: _remap(dataset) for split, dataset in ds.items()})
-    if isinstance(ds, Dataset):
-        return _remap(ds)
-    raise TypeError("ds must be a Dataset or DatasetDict.")
 
 
 def stratified_group_train_val_test_split(
