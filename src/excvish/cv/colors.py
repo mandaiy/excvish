@@ -220,6 +220,61 @@ def fill_transparent_with_mean(rgb: np.ndarray, mask: np.ndarray) -> np.ndarray:
     return np.clip(filled, 0, 255).astype(np.uint8)
 
 
+def align_crop_and_fill_rgba(image: np.ndarray) -> np.ndarray:
+    """Normalize an RGBA foreground by orientation, mask bounds, and mean-filled transparency.
+
+    Args:
+        image: Input image. RGBA arrays are rotated by their alpha mask long edge,
+            cropped to the foreground bounds, and flattened by replacing transparent
+            pixels with the foreground mean color. Non-RGBA arrays are returned as-is.
+
+    Returns:
+        RGB image when RGBA normalization is applied, otherwise the original array.
+    """
+    if image.ndim != 3 or image.shape[2] != 4:
+        return image
+
+    from excvish.cv.geometry import crop_to_mask_bounds, rotate_rgba_by_mask_long_edge
+
+    rotated, rotated_mask = rotate_rgba_by_mask_long_edge(image)
+    cropped, cropped_mask = crop_to_mask_bounds(rotated, rotated_mask)
+    if cropped_mask.size == 0 or not np.any(cropped_mask > 0):
+        return cropped[..., :3]
+    return fill_transparent_with_mean(cropped[..., :3], cropped_mask)
+
+
+def apply_solid_background_np(
+    np_img: np.ndarray,
+    background_color: tuple[int, int, int],
+) -> np.ndarray:
+    """Composite an RGBA NumPy image over a fixed RGB background.
+
+    Args:
+        np_img: Input image array. When RGBA, expected shape is ``(H, W, 4)``.
+        background_color: RGB background color in 8-bit channel units.
+
+    Returns:
+        RGB-like image array with dtype preserved when possible.
+    """
+    if np_img.ndim != 3 or np_img.shape[2] != 4:
+        return np_img[..., :3] if np_img.ndim == 3 and np_img.shape[2] > 3 else np_img
+
+    alpha = np_img[..., 3:4]
+    if np.issubdtype(np_img.dtype, np.floating) and np.nanmax(np_img[..., :3]) <= 1.0:
+        bg_color = np.asarray(background_color, dtype=np.float32) / 255.0
+        fg = np_img[..., :3].astype(np.float32)
+        out = fg * alpha + bg_color * (1.0 - alpha)
+        return out.astype(np_img.dtype)
+
+    bg_color = np.asarray(background_color, dtype=np.float32)
+    alpha_f = alpha.astype(np.float32) / 255.0
+    fg = np_img[..., :3].astype(np.float32)
+    out = fg * alpha_f + bg_color * (1.0 - alpha_f)
+    if np.issubdtype(np_img.dtype, np.integer):
+        out = np.rint(out)
+    return out.astype(np_img.dtype)
+
+
 def apply_random_background_np(
     np_img: np.ndarray,
     rng: np.random.Generator | None = None,
@@ -251,3 +306,50 @@ def apply_random_background_np(
     if np.issubdtype(np_img.dtype, np.integer):
         out = np.rint(out)
     return out.astype(np_img.dtype)
+
+
+def adjust_brightness_contrast(
+    image: np.ndarray,
+    *,
+    brightness_offset: float = 0.0,
+    contrast_scale: float = 1.0,
+    **_: object,
+) -> np.ndarray:
+    """Apply linear brightness and contrast adjustment with uint8 output bounds.
+
+    Args:
+        image: Input image array.
+        brightness_offset: Additive offset applied after contrast scaling.
+        contrast_scale: Multiplicative contrast scale.
+        **_: Extra keyword arguments accepted for Albumentations ``Lambda`` compatibility.
+
+    Returns:
+        Adjusted image clipped to ``[0, 255]`` as ``uint8``.
+    """
+    adjusted = image.astype(np.float32) * contrast_scale + brightness_offset
+    return np.clip(adjusted, 0, 255).astype(np.uint8)
+
+
+def adjust_saturation(
+    image: np.ndarray,
+    *,
+    saturation_scale: float,
+    **_: object,
+) -> np.ndarray:
+    """Interpolate RGB colors toward or away from grayscale.
+
+    Args:
+        image: Input image array. Only ``(H, W, 3)`` RGB arrays are adjusted.
+        saturation_scale: Interpolation scale around luminance grayscale.
+        **_: Extra keyword arguments accepted for Albumentations ``Lambda`` compatibility.
+
+    Returns:
+        Saturation-adjusted RGB image as ``uint8``. Non-RGB arrays are returned
+        unchanged.
+    """
+    if image.ndim != 3 or image.shape[2] != 3:
+        return image
+    gray = compute_luminance(image)
+    gray_rgb = np.repeat(gray[..., None], 3, axis=2)
+    adjusted = gray_rgb + saturation_scale * (image.astype(np.float32) - gray_rgb)
+    return np.clip(adjusted, 0, 255).astype(np.uint8)

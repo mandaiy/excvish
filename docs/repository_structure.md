@@ -32,6 +32,7 @@ Use it as the default placement rule for new code.
 - PIL/Pillow-based image utilities.
 - Responsibilities:
   - PIL image composition and canvas operations.
+  - Image-file discovery and fixed-size tile grid rendering.
   - PIL resize/pad and text rendering.
   - PIL <-> NumPy bridge helpers when PIL is the primary input.
 - Do not place OpenCV-specific logic here.
@@ -57,6 +58,8 @@ Use it as the default placement rule for new code.
 - Adapter layer for Albumentations integration.
 - `transforms.py`: custom transforms that follow Albumentations interfaces.
 - `helpers.py`: transform inspection and composition utilities.
+- `helpers.py` also owns PIL/RGBA-to-Albumentations glue such as splitting alpha
+  masks and compositing transformed RGBA images onto fixed or random backgrounds.
 - Put augmentation framework-specific glue here; keep framework-agnostic math in `cv/`.
 
 ### `src/excvish/ultralytics/`
