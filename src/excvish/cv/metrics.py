@@ -4,7 +4,7 @@ from typing import Literal, cast
 
 import cv2
 import numpy as np
-from scipy.spatial import cKDTree
+from scipy.spatial import KDTree
 from skimage.metrics import structural_similarity as ssim
 
 
@@ -33,8 +33,8 @@ def chamfer_distance(image1: np.ndarray, image2: np.ndarray) -> float:
     p1 = np.column_stack(np.where(image1 > 0))
     p2 = np.column_stack(np.where(image2 > 0))
 
-    t1 = cKDTree(p1)
-    t2 = cKDTree(p2)
+    t1 = KDTree(p1)
+    t2 = KDTree(p2)
 
     d1, _ = t1.query(p2)
     d2, _ = t2.query(p1)
@@ -76,7 +76,7 @@ def symmetricality_ssim(
             return cast(float, ssim(t, b))
 
         case _:
-            raise NotImplementedError(f"Not implemented yet: {direction}")  # type: ignore[unreachable]
+            raise NotImplementedError(f"Not implemented yet: {direction}")
 
 
 def symmetricality_chamfer_distance(
@@ -113,4 +113,4 @@ def symmetricality_chamfer_distance(
             return chamfer_distance(t, b)
 
         case _:
-            raise NotImplementedError(f"Not implemented yet: {direction}")  # type: ignore[unreachable]
+            raise NotImplementedError(f"Not implemented yet: {direction}")

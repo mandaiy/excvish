@@ -1,5 +1,7 @@
 """Albumentations custom transforms used in excvish."""
 
+from typing import Any
+
 import cv2
 import numpy as np
 from albumentations.core.transforms_interface import DualTransform, ImageOnlyTransform
@@ -31,11 +33,12 @@ class AlignLongEdgeHorizontal(DualTransform):
         self.border_value = border_value
         self.mask_value = mask_value
 
-    def apply(self, img: np.ndarray, angle: float = 0, **params) -> np.ndarray:
+    def apply(self, img: np.ndarray, *args: Any, angle: float = 0, **params: Any) -> np.ndarray:
         """Rotate an image with the computed angle.
 
         Args:
             img: Input image.
+            *args: Additional positional Albumentations parameters.
             angle: Rotation angle in degrees.
             **params: Additional Albumentations parameters.
 
@@ -52,11 +55,18 @@ class AlignLongEdgeHorizontal(DualTransform):
             expand=True,
         )
 
-    def apply_to_mask(self, mask: np.ndarray, angle: float = 0, **params) -> np.ndarray:
+    def apply_to_mask(
+        self,
+        mask: np.ndarray,
+        *args: Any,
+        angle: float = 0,
+        **params: Any,
+    ) -> np.ndarray:
         """Rotate a mask with the computed angle.
 
         Args:
             mask: Input mask.
+            *args: Additional positional Albumentations parameters.
             angle: Rotation angle in degrees.
             **params: Additional Albumentations parameters.
 
@@ -113,11 +123,18 @@ class FillOutsideMaskWithMeanColor(DualTransform):
         """
         super().__init__(p=p)
 
-    def apply(self, img: np.ndarray, mean_color: np.ndarray | None = None, **params) -> np.ndarray:
+    def apply(
+        self,
+        img: np.ndarray,
+        *args: Any,
+        mean_color: np.ndarray | None = None,
+        **params: Any,
+    ) -> np.ndarray:
         """Fill non-mask pixels by masked-region mean color.
 
         Args:
             img: Input image.
+            *args: Additional positional Albumentations parameters.
             mean_color: Mean color computed from mask region.
             **params: Additional Albumentations parameters.
 
@@ -132,11 +149,12 @@ class FillOutsideMaskWithMeanColor(DualTransform):
         filled = np.where(params["mask"][..., None] == 255, img, mean_color)
         return filled.astype(img.dtype)
 
-    def apply_to_mask(self, mask: np.ndarray, **params) -> np.ndarray:
+    def apply_to_mask(self, mask: np.ndarray, *args: Any, **params: Any) -> np.ndarray:
         """Return mask unchanged.
 
         Args:
             mask: Input mask.
+            *args: Additional positional Albumentations parameters.
             **params: Additional Albumentations parameters.
 
         Returns:
@@ -187,11 +205,12 @@ class ShadesOfGray(ImageOnlyTransform):
         super().__init__(p=p)
         self.p_norm_range = p_norm_range
 
-    def apply(self, img: np.ndarray, p_norm: float = 6.0, **params) -> np.ndarray:
+    def apply(self, img: np.ndarray, *args: Any, p_norm: float = 6.0, **params: Any) -> np.ndarray:
         """Apply shades-of-gray color constancy.
 
         Args:
             img: Input image.
+            *args: Additional positional Albumentations parameters.
             p_norm: Sampled Minkowski norm value.
             **params: Additional Albumentations parameters.
 

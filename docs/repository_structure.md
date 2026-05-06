@@ -68,6 +68,37 @@ Use it as the default placement rule for new code.
   - apply Ultralytics-specific resize/padding behavior.
 - Put Ultralytics-only logic here, not in generic `cv/` or `albumentations/` modules.
 
+### `src/excvish/torch/`
+
+- Adapter layer for PyTorch-based training utilities.
+- Responsibilities:
+  - batch-level image classification augmentation such as Mixup and CutMix,
+  - class-imbalance helpers such as weighted sampling and class weights,
+  - PyTorch loss functions,
+  - tensor-only test-time augmentation aggregation.
+- Keep these utilities independent from Hugging Face Trainer or project-specific
+  dataset conventions.
+
+### `src/excvish/hf/`
+
+- Adapter layer for Hugging Face Datasets and vision model utilities.
+- Responsibilities:
+  - dataset splitting, label projection, and label schema helpers,
+  - image processor size resolution,
+  - vision model forward-argument helpers.
+- Keep Hugging Face-specific imports out of generic `cv/`, `torch/`, and
+  `albumentations/` modules.
+
+### `src/excvish/optuna/`
+
+- Optuna-specific experiment management helpers.
+- Responsibilities:
+  - sqlite storage path construction and WAL setup,
+  - trial artifact cleanup and checkpoint symlink helpers,
+  - reusable metric aggregation callbacks,
+  - study metadata policy validation.
+- Keep Trainer-specific callbacks in `hf/` when they depend on Transformers.
+
 ## Placement rules for new implementation
 
 When adding new functionality, choose the location in this order:
@@ -77,7 +108,10 @@ When adding new functionality, choose the location in this order:
 3. Is it spectral-domain processing? -> `spectrum.py`
 4. Is it NumPy/OpenCV generic CV logic? -> `cv/`
 5. Is it Albumentations-specific API glue? -> `albumentations/`
-6. Is it Ultralytics-specific API glue? -> `ultralytics/`
+6. Is it PyTorch-specific but framework-generic training logic? -> `torch/`
+7. Is it Hugging Face-specific API glue? -> `hf/`
+8. Is it Optuna-specific experiment management? -> `optuna/`
+9. Is it Ultralytics-specific API glue? -> `ultralytics/`
 
 ## Dependency direction (recommended)
 
@@ -86,6 +120,9 @@ Keep dependencies one-way to avoid cyclic coupling:
 - `types` and package utilities (`__init__.py`) are base layers.
 - `cv/*` may depend on `types` and base utilities.
 - `albumentations/*` may depend on `cv/*`.
+- `torch/*` may depend on PyTorch, NumPy, and base utilities.
+- `hf/*` may depend on Hugging Face packages and `torch/*`.
+- `optuna/*` may depend on Optuna and filesystem utilities.
 - `ultralytics/*` may depend on `albumentations/*` and `cv/*`.
 - Avoid reverse dependencies (for example, `cv/*` importing `ultralytics/*`).
 
