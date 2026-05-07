@@ -33,6 +33,18 @@ def test_apply_solid_background_np_composites_normalized_float_rgba() -> None:
     assert composited.dtype == np.float32
 
 
+def test_apply_solid_background_np_normalizes_float_alpha_mask() -> None:
+    """Float RGB arrays should also support alpha masks stored in 8-bit units."""
+    rgba = np.array([[[1.0, 0.0, 0.0, 128.0]]], dtype=np.float32)
+
+    composited = apply_solid_background_np(rgba, background_color=(0, 0, 255))
+
+    alpha = 128.0 / 255.0
+    expected = np.array([[[alpha, 0.0, 1.0 - alpha]]], dtype=np.float32)
+    np.testing.assert_allclose(composited, expected)
+    assert composited.dtype == np.float32
+
+
 def test_adjust_brightness_contrast_clips_to_uint8() -> None:
     """Linear color adjustment should clip values into image channel bounds."""
     image = np.array([[[10, 100, 250]]], dtype=np.uint8)

@@ -14,7 +14,7 @@ class FocalLoss(torch.nn.Module):
     ):
         """Store weighting, focusing, and smoothing parameters for later loss computation."""
         super().__init__()
-        self.alpha = alpha
+        self.register_buffer("alpha", alpha)
         self.gamma = gamma
         self.label_smoothing = label_smoothing
 

@@ -243,6 +243,14 @@ def align_crop_and_fill_rgba(image: np.ndarray) -> np.ndarray:
     return fill_transparent_with_mean(cropped[..., :3], cropped_mask)
 
 
+def _normalize_alpha_for_compositing(alpha: np.ndarray) -> np.ndarray:
+    """Convert an alpha channel to float opacity values in the ``[0, 1]`` range."""
+    alpha_f = alpha.astype(np.float32)
+    if alpha_f.size and np.nanmax(alpha_f) > 1.0:
+        alpha_f = alpha_f / 255.0
+    return np.clip(alpha_f, 0.0, 1.0)
+
+
 def apply_solid_background_np(
     np_img: np.ndarray,
     background_color: tuple[int, int, int],
@@ -263,11 +271,12 @@ def apply_solid_background_np(
     if np.issubdtype(np_img.dtype, np.floating) and np.nanmax(np_img[..., :3]) <= 1.0:
         bg_color = np.asarray(background_color, dtype=np.float32) / 255.0
         fg = np_img[..., :3].astype(np.float32)
-        out = fg * alpha + bg_color * (1.0 - alpha)
+        alpha_f = _normalize_alpha_for_compositing(alpha)
+        out = fg * alpha_f + bg_color * (1.0 - alpha_f)
         return out.astype(np_img.dtype)
 
     bg_color = np.asarray(background_color, dtype=np.float32)
-    alpha_f = alpha.astype(np.float32) / 255.0
+    alpha_f = _normalize_alpha_for_compositing(alpha)
     fg = np_img[..., :3].astype(np.float32)
     out = fg * alpha_f + bg_color * (1.0 - alpha_f)
     if np.issubdtype(np_img.dtype, np.integer):
@@ -296,11 +305,12 @@ def apply_random_background_np(
     if np.issubdtype(np_img.dtype, np.floating) and np.nanmax(np_img[..., :3]) <= 1.0:
         bg_color = generator.random(3, dtype=np.float32)
         fg = np_img[..., :3].astype(np.float32)
-        out = fg * alpha + bg_color * (1.0 - alpha)
+        alpha_f = _normalize_alpha_for_compositing(alpha)
+        out = fg * alpha_f + bg_color * (1.0 - alpha_f)
         return out.astype(np_img.dtype)
 
     bg_color = generator.integers(0, 256, size=3, dtype=np.int32).astype(np.float32)
-    alpha_f = alpha.astype(np.float32) / 255.0
+    alpha_f = _normalize_alpha_for_compositing(alpha)
     fg = np_img[..., :3].astype(np.float32)
     out = fg * alpha_f + bg_color * (1.0 - alpha_f)
     if np.issubdtype(np_img.dtype, np.integer):
