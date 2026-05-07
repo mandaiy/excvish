@@ -27,7 +27,7 @@ def compute_min_area_rect(
     if not contours:
         return None
 
-    largest_contour = max(contours, key=cv2.contourArea)
+    largest_contour = max(contours, key=lambda contour: float(cv2.contourArea(contour)))
     if cv2.contourArea(largest_contour) == 0:
         return None
 
