@@ -1,14 +1,16 @@
 """Test-time augmentation utilities for PyTorch tensors."""
 
 import math
+from typing import Literal
 
 import torch
 import torch.nn.functional as F
 
-TTA_MERGE_MODES: tuple[str, ...] = ("mean_prob", "mean_logit")
+TTAMergeMode = Literal["mean_prob", "mean_logit"]
+TTA_MERGE_MODES: tuple[TTAMergeMode, ...] = ("mean_prob", "mean_logit")
 
 
-def aggregate_tta_logits(logits: torch.Tensor, tta_merge_mode: str) -> torch.Tensor:
+def aggregate_tta_logits(logits: torch.Tensor, tta_merge_mode: TTAMergeMode) -> torch.Tensor:
     """Reduce per-view logits by averaging logits or normalized probabilities."""
     if tta_merge_mode == "mean_logit":
         return logits.mean(dim=1)
